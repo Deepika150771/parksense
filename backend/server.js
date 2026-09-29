@@ -15,6 +15,9 @@ const simulatorRoutes = require('./routes/simulatorRoutes');
 const app = express();
 const server = http.createServer(app);
 
+// Connect DB (with fallback to in-memory)
+connectDB();
+
 // Initialize Socket.io with CORS
 const io = new Server(server, {
   cors: {
@@ -63,15 +66,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
-// Start database connection and server
-connectDB().then(() => {
+// Only start listening if run directly (not serverless export)
+if (require.main === module || !process.env.VERCEL) {
   server.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`🚀 ParkSense IoT Backend Server running on port ${PORT}`);
     console.log(`📡 WebSocket Gateway ready for live ESP32 & Web events`);
-    console.log(`🌐 Base URL: http://localhost:${PORT}/api/v1/slots`);
     console.log(`====================================================`);
   });
-});
+}
+
+module.exports = app;
